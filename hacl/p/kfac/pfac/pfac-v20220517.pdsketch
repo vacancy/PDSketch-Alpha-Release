@@ -1,0 +1,68 @@
+(define
+(domain painting-factory-v20220517)
+(:requirements :pdsketch-v2-1)
+
+(:types
+    item container - object
+    pose - vector[float32, 3]
+)
+
+(:feature item-pose [group="augmented"]
+    :parameters (?o - item)
+    :output (pose)
+)
+(:feature container-pose [group="augmented"]
+    :parameters (?o - container)
+    :output (pose)
+)
+(:feature item-image [group="augmented-input"]
+    :parameters (?o - item)
+    :output (vector[float32, 3])
+)
+(:feature container-image [group="augmented-input"]
+    :parameters (?o - container)
+    :output (vector[float32, 3])
+)
+(:feature item-feature [group="augmented"]
+    :parameters (?o - item)
+    :output (vector[float32, 64])
+    :expr (??f (item-image ?o))
+)
+(:feature container-feature [group="augmented"]
+    :parameters (?o - container)
+    :output (vector[float32, 64])
+    :expr (??f (container-image ?o))
+)
+
+(:derived (is-red    [group="goal"] ?o - item) (??f (item-feature ?o)))
+(:derived (is-green  [group="goal"] ?o - item) (??f (item-feature ?o)))
+(:derived (is-yellow [group="goal"] ?o - item) (??f (item-feature ?o)))
+(:derived (is-purple [group="goal"] ?o - item) (??f (item-feature ?o)))
+(:derived (is-pink   [group="goal"] ?o - item) (??f (item-feature ?o)))
+(:derived (is-cyan   [group="goal"] ?o - item) (??f (item-feature ?o)))
+(:derived (is-brown  [group="goal"] ?o - item) (??f (item-feature ?o)))
+(:derived (is-orange [group="goal"] ?o - item) (??f (item-feature ?o)))
+(:derived (is-target [group="goal"] ?o - container) (??f (container-feature ?o)))
+(:derived (is-left   [group="goal"] ?o1 - item ?o2 - item) (??f (item-pose ?o1) (item-pose ?o2)))
+(:derived (is-right  [group="goal"] ?o1 - item ?o2 - item) (??f (item-pose ?o1) (item-pose ?o2)))
+(:derived (is-on     [group="goal"] ?o1 - item ?o2 - item) (??f (item-pose ?o1) (item-pose ?o2)))
+(:derived (is-in     [group="goal"] ?o1 - item ?o2 - container) (??f (item-pose ?o1) (container-pose ?o2)))
+
+(:action move-into
+    :parameters (?o - item ?c - container)
+    :precondition (and )
+    :effect (and
+        (item-pose::assign ?o (container-pose ?c))
+        (item-feature::cond-assign ?o
+            (??g (container-feature ?c))
+            (??h (container-feature ?c))
+        )
+    )
+)
+(:action move-to
+    :parameters (?o - item ?p - pose)
+    :precondition (and )
+    :effect (and (item-pose::assign ?o ?p))
+)
+
+)

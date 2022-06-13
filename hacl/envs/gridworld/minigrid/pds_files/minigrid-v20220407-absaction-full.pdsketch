@@ -1,0 +1,143 @@
+(define
+(domain minigrid)
+(:requirements :pdsketch-v2-1)
+
+(:types
+    robot item - object
+    pose - vector[float32, 2]
+    direction - vector[int64, 1]
+)
+
+(:predicates
+    (robot-holding ?r - robot ?o - item)
+    (pickable ?o - item)
+    (toggleable ?o - item)
+
+    (empty-pose [return_type=pose, cacheable=false])
+    (robot-pose [return_type=pose] ?r - robot)
+    (robot-direction [return_type=direction] ?r - robot)
+    (item-pose [return_type=pose] ?o - item)
+
+    (facing [return_type=pose] ?p - pose ?d - direction)
+)
+
+(:feature item-image [group="augmented-input"]
+    :parameters (?o - item)
+    :output (vector[float32, 3])
+)
+
+(:feature item-type [group="augmented"]  ; box, door, etc.
+    :parameters (?o - item)
+    :output (vector[float32, 32, 64])
+    :expr (??f (item-image ?o))
+)
+(:feature item-color [group="augmented"]  ; color of the object
+    :parameters (?o - item)
+    :output (vector[float32, 32, 64])
+    :expr (??f (item-image ?o))
+)
+(:feature item-state [group="augmented"]  ; door is open
+    :parameters (?o - item)
+    :output (vector[float32, 32, 64])
+    :expr (??f (item-image ?o))
+)
+
+(:derived (is-facing ?p - pose ?d - direction ?t - pose)
+    (equal (facing ?p ?d) ?t)
+)
+(:derived (hands-free ?r - robot)
+    (not (exists (?o - item) (robot-holding ?r ?o)))
+)
+(:derived (pose-free ?p - pose)
+    (not (exists (?o - item) (equal (item-pose ?o) ?p)))
+)
+(:derived (robot-facing [return_type=pose] ?r - robot)
+    (facing (robot-pose ?r) (robot-direction ?r))
+)
+(:derived (robot-is-facing ?r - robot ?o - item)
+    (is-facing (robot-pose ?r) (robot-direction ?r) (item-pose ?o))
+)
+
+(:derived (is-red    [group="goal"] ?o - item) (??f (item-color ?o)))
+(:derived (is-green  [group="goal"] ?o - item) (??f (item-color ?o)))
+(:derived (is-blue   [group="goal"] ?o - item) (??f (item-color ?o)))
+(:derived (is-purple [group="goal"] ?o - item) (??f (item-color ?o)))
+(:derived (is-yellow [group="goal"] ?o - item) (??f (item-color ?o)))
+(:derived (is-grey   [group="goal"] ?o - item) (??f (item-color ?o)))
+
+(:derived (is-key  [group="goal"] ?o - item) (??f (item-type ?o)))
+(:derived (is-ball [group="goal"] ?o - item) (??f (item-type ?o)))
+(:derived (is-box  [group="goal"] ?o - item) (??f (item-type ?o)))
+(:derived (is-door [group="goal"] ?o - item) (??f (item-type ?o)))
+
+; (:derived (is-open [group="goal"] ?o - item) (??f (item-type ?o) (item-state ?o)))
+
+(:action move
+    :parameters (?r - robot ?p - pose ?d - direction)
+    :precondition (pose-free ?p)
+    :effect (and
+        (robot-pose::assign ?r ?p)
+        (robot-direction ::assign ?r ?d)
+    )
+)
+(:action pickup
+    :parameters (?r - robot ?o - item)
+    :precondition (and
+        (hands-free ?r)
+        (robot-is-facing ?r ?o)
+        (pickable ?o)
+    )
+    :effect (and
+        +(robot-holding ?r ?o)
+        (item-pose::assign ?o (empty-pose))
+    )
+)
+(:action place
+    :parameters (?r - robot ?o - item)
+    :precondition (and
+        (robot-holding ?r ?o)
+    )
+    :effect (and
+        -(robot-holding ?r ?o)
+        (item-pose::assign ?o (robot-facing ?r))
+    )
+)
+; (:action toggle
+;     :parameters (?r - robot ?target - item)
+;     :precondition (and )
+;     :effect (and
+;         (item-state::assign ?target (??f (item-type ?target) (item-color ?target) (item-state ?target)))
+;     )
+; )
+(:action toggle-tool
+    :parameters (?r - robot ?holding - item ?target - item)
+    :precondition (and
+        (robot-holding ?r ?holding)
+        (toggleable ?target)
+    )
+    :effect (and
+        (item-state::assign ?target
+            (??f (item-type ?holding) (item-color ?holding)
+                 (item-type ?target) (item-color ?target) (item-state ?target))
+        )
+    )
+)
+(:generator gen-direction [priority=0]
+    :parameters (?d - direction)
+    :certifies (and )
+    :context (and )
+    :generates (and ?d)
+)
+(:generator gen-pose-neq [priority=1]
+    :parameters (?p1 - pose ?p2 - pose)
+    :certifies (not (equal ?p1 ?p2))
+    :context (and ?p1)
+    :generates (and ?p2)
+)
+(:generator gen-facing-robot [priority=2]
+    :parameters (?r - robot ?o - item)
+    :certifies (robot-is-facing ?r ?o)
+    :context (and (item-pose ?o))
+    :generates (and (robot-pose ?r) (robot-direction ?r))
+)
+)

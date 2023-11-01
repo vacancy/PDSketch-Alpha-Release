@@ -13,6 +13,7 @@
 **[PDSketch: Integrated Domain Programming, Learning, and Planning](https://pdsketch.csail.mit.edu/data/papers/2022NeurIPS-PDSketch.pdf)**
 <br />
 [Jiayuan Mao](http://jiayuanm.com), 
+[Tomás Lozano-Pérez](https://people.csail.mit.edu/tlp/),
 [Joshua B. Tenenbaum](https://web.mit.edu/cocosci/josh.html), and
 [Leslie Pack Kaelbling](https://people.csail.mit.edu/lpk/)
 <br />
